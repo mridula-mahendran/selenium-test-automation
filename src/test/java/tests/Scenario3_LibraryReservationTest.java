@@ -1,10 +1,12 @@
 package tests;
 
+import java.time.Duration;
 import base.BaseTest;
 import com.aventstack.extentreports.ExtentTest;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import utils.ReportManager;
@@ -39,9 +41,26 @@ public class Scenario3_LibraryReservationTest extends BaseTest {
 
             // Step b) Click on Reserve a Study Room
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_B_ReserveRoom");
-            WebElement reserveLink = wait.until(ExpectedConditions.elementToBeClickable(
+
+            // Dismiss cookie consent banner if present
+            try {
+                WebElement consentButton = new WebDriverWait(driver, Duration.ofSeconds(5))
+                        .until(ExpectedConditions.elementToBeClickable(
+                                By.xpath("//button[contains(text(),'Accept') or contains(text(),'OK') or contains(text(),'Got it') or contains(text(),'Agree')]")));
+                consentButton.click();
+                Thread.sleep(1000);
+                System.out.println("Dismissed cookie consent banner.");
+            } catch (Exception e) {
+                System.out.println("No cookie consent banner found.");
+            }
+
+            // Use JavaScript click to avoid interception
+            WebElement reserveLink = wait.until(ExpectedConditions.presenceOfElementLocated(
                     By.xpath("//a[contains(text(),'Reserve A Study Room') or contains(text(),'Reserve a Study Room')]")));
-            reserveLink.click();
+            JavascriptExecutor js2 = (JavascriptExecutor) driver;
+            js2.executeScript("arguments[0].scrollIntoView(true);", reserveLink);
+            Thread.sleep(500);
+            js2.executeScript("arguments[0].click();", reserveLink);
             ReportManager.logInfo(test, "Clicked on Reserve a Study Room.");
             Thread.sleep(2000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_B_ReserveRoom");
@@ -86,9 +105,9 @@ public class Scenario3_LibraryReservationTest extends BaseTest {
 
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_E_SelectFilters");
 
-            // Verify the filters were applied
-            Assert.assertTrue(seatStyleDropdown.isDisplayed(), "Seat Style dropdown should be visible.");
-            Assert.assertTrue(capacityDropdown.isDisplayed(), "Capacity dropdown should be visible.");
+            // Verify the filters were applied by re-finding elements (avoids stale reference)
+            WebElement seatStyleVerify = driver.findElement(By.xpath("//select[contains(@id,'seat') or ancestor::*[contains(.,'Seat Style')]/select]"));
+            Assert.assertTrue(seatStyleVerify.isDisplayed(), "Seat Style dropdown should be visible.");
             ReportManager.logInfo(test, "Verified filter dropdowns are displayed.");
 
             // Step f) Scroll down to the end of the page

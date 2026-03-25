@@ -41,16 +41,31 @@ public class Scenario4_DatasetDownloadTest extends BaseTest {
             // Click on Digital Repository Service
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_A_ClickDRS");
             WebElement drsLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'DIGITAL REPOSITORY SERVICE') or contains(text(),'Digital Repository Service')]")));
+                    By.xpath("//span[@translate='mainmenu.label.digitalrepository']/ancestor::a | //span[contains(text(),'digital repository')]/..")));
             drsLink.click();
             ReportManager.logInfo(test, "Clicked on Digital Repository Service.");
             Thread.sleep(3000);
+
+            // Switch to new tab if DRS opened in a new tab
+            String mainWindow = driver.getWindowHandle();
+            for (String window : driver.getWindowHandles()) {
+                if (!window.equals(mainWindow)) {
+                    driver.switchTo().window(window);
+                    break;
+                }
+            }
+
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_A_ClickDRS");
 
             // Step b) Click on Datasets under Featured Content
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_B_ClickDatasets");
-            WebElement datasetsLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'Datasets')]")));
+
+            // Scroll down to find Datasets link
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            WebElement datasetsLink = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.xpath("//a[@href='/datasets']")));
+            js.executeScript("arguments[0].scrollIntoView(true);", datasetsLink);
+            Thread.sleep(1000);
             datasetsLink.click();
             ReportManager.logInfo(test, "Clicked on Datasets under Featured Content.");
             Thread.sleep(3000);

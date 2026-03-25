@@ -1,9 +1,11 @@
 package base;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.*;
 import utils.ReportManager;
@@ -14,8 +16,7 @@ import java.util.Map;
 
 /**
  * Base test class that all test scenario classes will extend.
- * Handles browser setup, teardown, and report initialization.
- * Provides shared WebDriver and WebDriverWait instances.
+ * Handles browser setup, teardown, report initialization, and NEU login.
  */
 public class BaseTest {
 
@@ -41,9 +42,6 @@ public class BaseTest {
      */
     @BeforeMethod
     public void setUp() {
-        // Auto-download and setup ChromeDriver
-        WebDriverManager.chromedriver().setup();
-
         // Configure Chrome options
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--start-maximized");
@@ -61,6 +59,59 @@ public class BaseTest {
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
         System.out.println("Browser launched successfully.");
+    }
+
+    /**
+     * Handles NEU login via Microsoft SSO + Duo 2FA.
+     * This is a two-step login: email first, then password.
+     *
+     * @param url      - the URL to navigate to (triggers SSO)
+     * @param username - NEU email or username
+     * @param password - NEU password
+     */
+    protected void performNEULogin(String url, String username, String password) throws InterruptedException {
+        driver.get(url);
+
+        // Step 1: Microsoft SSO - Enter email
+        WebElement emailField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
+        emailField.clear();
+        emailField.sendKeys(username);
+
+        // Click Next
+        WebElement nextButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("idSIButton9")));
+        nextButton.click();
+        System.out.println("Entered email and clicked Next.");
+
+        // Step 2: Enter password
+        // Wait for password field to appear (could be Microsoft or NEU page)
+        Thread.sleep(2000);
+        WebElement passwordField = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.id("i0118")));
+        passwordField.clear();
+        passwordField.sendKeys(password);
+
+        // Click Sign In
+        WebElement signInButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("idSIButton9")));
+        signInButton.click();
+        System.out.println("Entered password and clicked Sign In.");
+
+        // Step 3: Wait for Duo 2FA - manual approval
+        System.out.println("Waiting for Duo 2FA approval...");
+        Thread.sleep(20000);
+
+        // Step 4: Handle "Is this your device?" prompt
+        try {
+            WebElement yesButton = new WebDriverWait(driver, Duration.ofSeconds(10))
+                    .until(ExpectedConditions.elementToBeClickable(
+                            By.xpath("//button[contains(text(),'Yes, this is my device')]")));
+            yesButton.click();
+            System.out.println("Clicked 'Yes, this is my device'.");
+        } catch (Exception e) {
+            System.out.println("No device prompt appeared.");
+        }
+
+        Thread.sleep(3000);
+        System.out.println("Login completed.");
     }
 
     /**
