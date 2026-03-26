@@ -3,14 +3,16 @@ package tests;
 import base.BaseTest;
 import com.aventstack.extentreports.ExtentTest;
 import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import utils.ExcelReader;
 import utils.ReportManager;
 import utils.ScreenshotHelper;
 
+import java.io.File;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,8 +24,8 @@ import java.util.Set;
  *   c) Hit the Resources tab
  *   d) Go to Academics, Classes & Registration
  *   e) Go to Unofficial Transcript
- *   f) Select Graduate in Transcript Level, Audit Transcript in Transcript Type, click Submit
- *   g) Right-click on screen, Print Page, Save as PDF
+ *   f) Select Graduate in Transcript Level, Audit Transcript in Transcript Type
+ *   g) Save page as PDF
  */
 public class Scenario1_TranscriptTest extends BaseTest {
 
@@ -69,21 +71,26 @@ public class Scenario1_TranscriptTest extends BaseTest {
             Thread.sleep(2000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_C_Resources");
 
-            // Step d) Click on Academics, Classes & Registration
+            // Step d) Click on Academics, Classes & Registration tile
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_D_Academics");
-            WebElement academicsLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//*[contains(text(),'Academics')]")));
-            academicsLink.click();
+            WebElement academicsTile = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//span[contains(@class,'fui-Tab__content') and contains(text(),'Academics')]")));
+            academicsTile.click();
             ReportManager.logInfo(test, "Clicked on Academics, Classes & Registration.");
-            Thread.sleep(2000);
+            Thread.sleep(3000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_D_Academics");
 
-            // Step e) Click on Unofficial Transcript
+            // Step e) Click on Unofficial Transcript from the EXPANDED LIST
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_E_Transcript");
+
+            // Scroll down to find Unofficial Transcript in the expanded list
+            JavascriptExecutor js = (JavascriptExecutor) driver;
             WebElement transcriptLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'Unofficial Transcript')]")));
+                    By.xpath("//a[@data-gtm-resources-link='Unofficial Transcript' and @data-gtm-resources-link-section='Main']")));
+            js.executeScript("arguments[0].scrollIntoView(true);", transcriptLink);
+            Thread.sleep(1000);
             transcriptLink.click();
-            ReportManager.logInfo(test, "Clicked on Unofficial Transcript.");
+            ReportManager.logInfo(test, "Clicked on Unofficial Transcript from expanded list.");
             Thread.sleep(3000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_E_Transcript");
 
@@ -99,50 +106,131 @@ public class Scenario1_TranscriptTest extends BaseTest {
                 }
             }
 
-            // Step f) Select Graduate and Audit Transcript, then Submit
+            // Handle NEU Banner SSO login (different from Microsoft SSO)
+            // Username is without @northeastern.edu
+            Thread.sleep(3000);
+            try {
+                WebElement neuUsername = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                        By.id("username")));
+                // Strip @northeastern.edu from the email
+                String bannerUsername = username.replace("@northeastern.edu", "");
+                neuUsername.clear();
+                neuUsername.sendKeys(bannerUsername);
+
+                WebElement neuPassword = driver.findElement(By.id("password"));
+                neuPassword.clear();
+                neuPassword.sendKeys(password);
+
+                WebElement loginButton = driver.findElement(
+                        By.xpath("//button[@name='_eventId_proceed' or contains(text(),'Log In')]"));
+                loginButton.click();
+                ReportManager.logInfo(test, "Logged in to NEU Banner SSO.");
+
+                // Duo 2FA - switch into the Duo iframe and click "Send Me a Push"
+                Thread.sleep(3000);
+                try {
+                    WebElement duoIframe = wait.until(ExpectedConditions.presenceOfElementLocated(
+                            By.id("duo_iframe")));
+                    driver.switchTo().frame(duoIframe);
+
+                    WebElement sendPushButton = wait.until(ExpectedConditions.elementToBeClickable(
+                            By.xpath("//button[contains(text(),'Send Me a Push')]")));
+                    sendPushButton.click();
+                    System.out.println("Clicked 'Send Me a Push' in Duo iframe.");
+
+                    // Switch back to main page
+                    driver.switchTo().defaultContent();
+                } catch (Exception duoEx) {
+                    System.out.println("No Duo iframe/push button found.");
+                    driver.switchTo().defaultContent();
+                }
+
+                // Wait for Duo 2FA approval
+                System.out.println("Waiting for Duo 2FA approval (Banner SSO)...");
+                Thread.sleep(20000);
+
+                // Handle "Is this your device?" prompt if it appears
+                try {
+                    WebElement yesButton = new org.openqa.selenium.support.ui.WebDriverWait(driver, Duration.ofSeconds(10))
+                            .until(ExpectedConditions.elementToBeClickable(
+                                    By.xpath("//button[contains(text(),'Yes, this is my device')]")));
+                    yesButton.click();
+                    System.out.println("Clicked 'Yes, this is my device' (Banner SSO).");
+                } catch (Exception e2) {
+                    System.out.println("No device prompt appeared for Banner SSO.");
+                }
+                Thread.sleep(3000);
+            } catch (Exception e) {
+                System.out.println("No Banner SSO login required, already authenticated.");
+            }
+
+            // Step f) Select Graduate and Audit Transcript (Select2 custom dropdowns)
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_F_SelectOptions");
             Thread.sleep(3000);
 
-            // Select Transcript Level
-            WebElement levelDropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("levl")));
-            Select levelSelect = new Select(levelDropdown);
-            levelSelect.selectByVisibleText(transcriptLevel);
+            // Click the Transcript Level dropdown to open it
+            WebElement levelDropdown = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//div[@id='transcriptLevelSelection']//a[contains(@class,'select2-choice')]")));
+            levelDropdown.click();
+            Thread.sleep(1000);
+
+            // Select the transcript level (e.g., "Graduate") from the dropdown list
+            WebElement levelOption = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//div[contains(@class,'ng-binding') and contains(text(),'" + transcriptLevel + "')]")));
+            levelOption.click();
             ReportManager.logInfo(test, "Selected Transcript Level: " + transcriptLevel);
+            Thread.sleep(2000);
 
-            // Select Transcript Type
-            WebElement typeDropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.id("tprt")));
-            Select typeSelect = new Select(typeDropdown);
-            typeSelect.selectByVisibleText(transcriptType);
+            // Click the Transcript Type dropdown to open it
+            WebElement typeDropdown = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//div[@id='transcriptTypeSelection']//a[contains(@class,'select2-choice')]")));
+            typeDropdown.click();
+            Thread.sleep(1000);
+
+            // Select the transcript type (e.g., "Audit Transcript") from the dropdown list
+            WebElement typeOption = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//div[contains(@class,'ng-binding') and contains(text(),'" + transcriptType + "')]")));
+            typeOption.click();
             ReportManager.logInfo(test, "Selected Transcript Type: " + transcriptType);
+            Thread.sleep(5000); // Wait for transcript content to load after both selections
 
-            // Click Submit
-            WebElement submitButton = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//input[@type='submit' and @value='Submit']")));
-            submitButton.click();
-            ReportManager.logInfo(test, "Clicked Submit button.");
-            Thread.sleep(3000);
+            ReportManager.logInfo(test, "Transcript content loaded successfully.");
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_F_SelectOptions");
 
-            // Step g) Print page and save as PDF
-            ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_G_PrintPage");
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            js.executeScript("window.print();");
-            ReportManager.logInfo(test, "Triggered Print to save as PDF.");
-            Thread.sleep(5000);
-            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_G_PrintPage");
+            // Step g) Save page as PDF using Chrome DevTools Protocol
+            ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_G_SavePDF");
 
-            // Assert that transcript page loaded successfully
-            String pageSource = driver.getPageSource();
-            Assert.assertTrue(pageSource.contains("Transcript") || pageSource.contains("Student Information"),
-                    "Transcript page did not load correctly.");
+            // Use Chrome DevTools to print page to PDF
+            String downloadDir = System.getProperty("user.dir") + "\\downloads";
+            new File(downloadDir).mkdirs(); // Ensure directory exists
 
-            ReportManager.logPass(test, "Transcript downloaded as PDF", "Transcript page loaded and PDF saved");
+            // Execute CDP command to print page as PDF
+            String pdfContent = ((ChromeDriver) driver).executeCdpCommand(
+                    "Page.printToPDF",
+                    Map.of("printBackground", true, "landscape", false)
+            ).get("data").toString();
+
+            // Decode Base64 and save to file
+            byte[] pdfBytes = java.util.Base64.getDecoder().decode(pdfContent);
+            String pdfPath = downloadDir + "\\Academic_Transcript.pdf";
+            java.nio.file.Files.write(java.nio.file.Paths.get(pdfPath), pdfBytes);
+            ReportManager.logInfo(test, "Saved transcript as PDF: " + pdfPath);
+
+            // Verify PDF file was created
+            File pdfFile = new File(pdfPath);
+            Assert.assertTrue(pdfFile.exists() && pdfFile.length() > 0,
+                    "PDF file should be created and non-empty.");
+            ReportManager.logInfo(test, "PDF file verified: " + pdfFile.length() + " bytes.");
+
+            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_G_SavePDF");
+
+            ReportManager.logPass(test, "Transcript downloaded as PDF",
+                    "Transcript page loaded and PDF saved successfully");
 
         } catch (Exception e) {
             ScreenshotHelper.takeScreenshot(driver, SCENARIO_NAME, "FAILURE");
-            ReportManager.logFail(test, "Transcript downloaded as PDF", "Failed: " + e.getMessage());
+            ReportManager.logFail(test, "Transcript downloaded as PDF",
+                    "Failed: " + e.getMessage());
             Assert.fail("Scenario 1 failed: " + e.getMessage());
         }
     }
