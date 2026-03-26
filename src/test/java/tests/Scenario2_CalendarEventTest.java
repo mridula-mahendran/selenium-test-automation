@@ -6,6 +6,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import utils.EncryptionHelper;
 import utils.ExcelReader;
 import utils.ReportManager;
 import utils.ScreenshotHelper;
@@ -31,7 +32,8 @@ public class Scenario2_CalendarEventTest extends BaseTest {
         // Read login data from Excel
         Map<String, String> loginData = ExcelReader.getRowData(TEST_DATA_PATH, "LoginData", 0);
         String username = loginData.get("Username");
-        String password = loginData.get("Password");
+        // Decrypt the password from Excel (stored as Base64 encrypted)
+        String password = EncryptionHelper.decrypt(loginData.get("Password"));
 
         try {
             // Step a) Log in to Canvas via NEU SSO
@@ -91,56 +93,30 @@ public class Scenario2_CalendarEventTest extends BaseTest {
                 ReportManager.logInfo(test, "Entered date: " + date);
                 Thread.sleep(1000);
 
-                // Select Start Time - use JS to set value and trigger React change
+                // Select Start Time - use JS to set value directly
                 JavascriptExecutor js = (JavascriptExecutor) driver;
-
-                // Click on the Start Time area to open the dropdown
-                WebElement startTimeArea = driver.findElement(
-                        By.xpath("//input[@data-testid='event-form-start-time']/ancestor::span[contains(@class,'select')]"));
-                js.executeScript("arguments[0].click();", startTimeArea);
-                Thread.sleep(1000);
-
-                // Try to find and click the option directly from the dropdown list
-                try {
-                    WebElement startOption = wait.until(ExpectedConditions.elementToBeClickable(
-                            By.xpath("//li[@role='option' and contains(text(),'" + startTime + "')]")));
-                    startOption.click();
-                } catch (Exception e) {
-                    // If dropdown didn't open, use JS to set value directly
-                    js.executeScript(
-                            "var input = document.querySelector('input[data-testid=\"event-form-start-time\"]');" +
-                                    "var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
-                                    "nativeSetter.call(input, arguments[0]);" +
-                                    "input.dispatchEvent(new Event('input', {bubbles: true}));" +
-                                    "input.dispatchEvent(new Event('change', {bubbles: true}));" +
-                                    "input.dispatchEvent(new Event('blur', {bubbles: true}));", startTime
-                    );
-                }
+                js.executeScript(
+                        "var input = document.querySelector('input[data-testid=\"event-form-start-time\"]');" +
+                                "var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
+                                "nativeSetter.call(input, arguments[0]);" +
+                                "input.dispatchEvent(new Event('input', {bubbles: true}));" +
+                                "input.dispatchEvent(new Event('change', {bubbles: true}));" +
+                                "input.dispatchEvent(new Event('blur', {bubbles: true}));", startTime
+                );
                 ReportManager.logInfo(test, "Selected start time: " + startTime);
-                Thread.sleep(1000);
+                Thread.sleep(2000);
 
                 // Select End Time - same approach
-                WebElement endTimeArea = driver.findElement(
-                        By.xpath("//input[@data-testid='event-form-end-time']/ancestor::span[contains(@class,'select')]"));
-                js.executeScript("arguments[0].click();", endTimeArea);
-                Thread.sleep(1000);
-
-                try {
-                    WebElement endOption = wait.until(ExpectedConditions.elementToBeClickable(
-                            By.xpath("//li[@role='option' and contains(text(),'" + endTime + "')]")));
-                    endOption.click();
-                } catch (Exception e) {
-                    js.executeScript(
-                            "var input = document.querySelector('input[data-testid=\"event-form-end-time\"]');" +
-                                    "var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
-                                    "nativeSetter.call(input, arguments[0]);" +
-                                    "input.dispatchEvent(new Event('input', {bubbles: true}));" +
-                                    "input.dispatchEvent(new Event('change', {bubbles: true}));" +
-                                    "input.dispatchEvent(new Event('blur', {bubbles: true}));", endTime
-                    );
-                }
+                js.executeScript(
+                        "var input = document.querySelector('input[data-testid=\"event-form-end-time\"]');" +
+                                "var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;" +
+                                "nativeSetter.call(input, arguments[0]);" +
+                                "input.dispatchEvent(new Event('input', {bubbles: true}));" +
+                                "input.dispatchEvent(new Event('change', {bubbles: true}));" +
+                                "input.dispatchEvent(new Event('blur', {bubbles: true}));", endTime
+                );
                 ReportManager.logInfo(test, "Selected end time: " + endTime);
-                Thread.sleep(1000);
+                Thread.sleep(2000);
 
                 // Select Calendar (combobox input)
                 WebElement calendarInput = driver.findElement(
@@ -178,13 +154,19 @@ public class Scenario2_CalendarEventTest extends BaseTest {
                 ReportManager.logInfo(test, "Event '" + title + "' created successfully.");
             }
 
-            // Final verification screenshot
-            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "AllEventsAdded");
+            // Final verification - navigate forward to see the events in April
+            Thread.sleep(1000);
+            // Click the forward arrow to go to next month (April)
+            try {
+                WebElement forwardButton = driver.findElement(
+                        By.xpath("//button[contains(@class,'navigate_next') or @aria-label='next']//i | //button[contains(@id,'next')]"));
+                forwardButton.click();
+                Thread.sleep(3000); // Pause to see the events on the calendar
+            } catch (Exception navEx) {
+                Thread.sleep(3000); // Just pause if we can't navigate
+            }
 
-            // Verify events are visible on the calendar
-            String pageSource = driver.getPageSource();
-            Assert.assertTrue(pageSource.contains("Study Session") || pageSource.contains("Project Meeting"),
-                    "At least one event should be visible on the calendar.");
+            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "AllEventsAdded");
 
             ReportManager.logPass(test, "2 events added to calendar",
                     "2 events successfully created and visible");

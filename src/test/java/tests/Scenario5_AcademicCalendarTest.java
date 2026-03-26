@@ -6,6 +6,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import utils.EncryptionHelper;
 import utils.ExcelReader;
 import utils.ReportManager;
 import utils.ScreenshotHelper;
@@ -35,7 +36,8 @@ public class Scenario5_AcademicCalendarTest extends BaseTest {
         // Read login data from Excel
         Map<String, String> loginData = ExcelReader.getRowData(TEST_DATA_PATH, "LoginData", 0);
         String username = loginData.get("Username");
-        String password = loginData.get("Password");
+        // Decrypt the password from Excel (stored as Base64 encrypted)
+        String password = EncryptionHelper.decrypt(loginData.get("Password"));
 
         try {
             // Step a) Log in and navigate to Student Hub

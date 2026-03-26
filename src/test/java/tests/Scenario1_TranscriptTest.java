@@ -7,6 +7,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+import utils.EncryptionHelper;
 import utils.ExcelReader;
 import utils.ReportManager;
 import utils.ScreenshotHelper;
@@ -40,7 +41,8 @@ public class Scenario1_TranscriptTest extends BaseTest {
         Map<String, String> loginData = ExcelReader.getRowData(TEST_DATA_PATH, "LoginData", 0);
         String url = loginData.get("URL");
         String username = loginData.get("Username");
-        String password = loginData.get("Password");
+        // Decrypt the password from Excel (stored as Base64 encrypted)
+        String password = EncryptionHelper.decrypt(loginData.get("Password"));
 
         // Read transcript data from Excel
         Map<String, String> transcriptData = ExcelReader.getRowData(TEST_DATA_PATH, "TranscriptData", 0);
