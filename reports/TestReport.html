@@ -35,7 +35,7 @@
 <a href="#"><span class="badge badge-primary">INFO6255 Test Scenarios Report</span></a>
 </li>
 <li class="m-r-10">
-<a href="#"><span class="badge badge-primary">Mar 25, 2026 03:31:56 PM</span></a>
+<a href="#"><span class="badge badge-primary">Mar 25, 2026 10:07:39 PM</span></a>
 </li>
 </ul>
 </div>
@@ -66,7 +66,7 @@
 <li class="dropdown">
 <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-exclamation-circle"></i></a>
 <ul id="status-toggle" class="dropdown-menu dropdown-md p-v-0">
-<a class="dropdown-item" status="fail" href="#"><span>Fail</span><span class="status danger"></span></a>
+<a class="dropdown-item" status="pass" href="#"><span>Pass</span><span class="status success"></span></a>
 <div class="dropdown-divider"></div>
 <a status="clear" class="dropdown-item" href="#"><span>Clear</span><span class="pull-right"><i class="fa fa-close"></i></span></a>
 </ul>
@@ -74,25 +74,25 @@
 </ul>
 </div>    <div class="test-list-wrapper scrollable">
       <ul class="test-list-item">
-        <li class="test-item"  status="fail" test-id="1"
+        <li class="test-item"  status="pass" test-id="1"
           author=""
           tag=""
           device="">
           <div class="test-detail">
-            <p class="name">Scenario 4: Download a Dataset (Negative)</p>
+            <p class="name">Scenario 5: Update the Academic Calendar</p>
             <p class="text-sm">
-              <span>3:32:00 PM</span> / <span>00:00:29:635</span>
-              <span class="badge fail-bg log float-right">Fail</span>
+              <span>10:07:41 PM</span> / <span>00:01:12:145</span>
+              <span class="badge pass-bg log float-right">Pass</span>
             </p>
           </div>
           <div class="test-contents d-none">
 <div class="detail-head">
 <div class="p-v-10">
 <div class="info">
-<h5 class="test-status text-fail">Scenario 4: Download a Dataset (Negative)</h5>
-<span class='badge badge-success'>03.25.2026 3:32:00 PM</span>
-<span class='badge badge-danger'>03.25.2026 3:32:30 PM</span>
-<span class='badge badge-default'>00:00:29:635</span>
+<h5 class="test-status text-pass">Scenario 5: Update the Academic Calendar</h5>
+<span class='badge badge-success'>03.25.2026 10:07:41 PM</span>
+<span class='badge badge-danger'>03.25.2026 10:08:53 PM</span>
+<span class='badge badge-default'>00:01:12:145</span>
 &middot; <span class='uri-anchor badge badge-default'>#test-id=1</span>
 <span title='Skip to the next failed step' class='badge badge-danger pointer float-right ne ml-1'><i class="fa fa-fast-forward"></i></span>
 <span title='Collapse all nodes' class='badge badge-default pointer float-right ct ml-1'><i class="fa fa-compress"></i></span>
@@ -105,58 +105,100 @@
   <tbody>
       <tr class="event-row">
         <td><span class="badge log info-bg">Info</span></td>
-        <td>3:32:06 PM</td>
+        <td>10:08:12 PM</td>
         <td>
-          Navigated to Scholar OneSearch.
+          Logged in to NEU portal.
         </td>
       </tr>
       <tr class="event-row">
         <td><span class="badge log info-bg">Info</span></td>
-        <td>3:32:07 PM</td>
+        <td>10:08:14 PM</td>
         <td>
-          Clicked on Digital Repository Service.
+          Navigated to Student Hub.
         </td>
       </tr>
       <tr class="event-row">
         <td><span class="badge log info-bg">Info</span></td>
-        <td>3:32:16 PM</td>
+        <td>10:08:17 PM</td>
         <td>
-          Clicked on Datasets under Featured Content.
+          Clicked on Resources tab.
         </td>
       </tr>
       <tr class="event-row">
         <td><span class="badge log info-bg">Info</span></td>
-        <td>3:32:21 PM</td>
+        <td>10:08:19 PM</td>
         <td>
-          Opened dataset: Recent Deposits
+          Clicked on Academics, Classes & Registration tile.
         </td>
       </tr>
       <tr class="event-row">
         <td><span class="badge log info-bg">Info</span></td>
-        <td>3:32:25 PM</td>
+        <td>10:08:23 PM</td>
         <td>
-          Clicked on Zip File to download.
+          Clicked on Academic Calendar from expanded list.
         </td>
       </tr>
       <tr class="event-row">
-        <td><span class="badge log fail-bg">Fail</span></td>
-        <td>3:32:30 PM</td>
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>10:08:30 PM</td>
         <td>
-          Expected: Dataset downloaded as .csv file
+          Clicked on Academic Calendar under Registrar.
         </td>
       </tr>
       <tr class="event-row">
-        <td><span class="badge log fail-bg">Fail</span></td>
-        <td>3:32:30 PM</td>
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>10:08:41 PM</td>
         <td>
-          Actual: File was downloaded as .zip, not .csv. Negative test case failed as expected.
+          Switched to Calendar List iframe.
         </td>
       </tr>
       <tr class="event-row">
-        <td><span class="badge log fail-bg">Fail</span></td>
-        <td>3:32:30 PM</td>
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>10:08:44 PM</td>
         <td>
-          Result: FAIL
+          Scrolled to Calendars section.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>10:08:47 PM</td>
+        <td>
+          Clicked on Quarter - CPS Graduate (QTR) to toggle.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>10:08:49 PM</td>
+        <td>
+          Checkbox toggled successfully.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log info-bg">Info</span></td>
+        <td>10:08:53 PM</td>
+        <td>
+          Verified Add to My Calendar button is displayed.
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>10:08:53 PM</td>
+        <td>
+          Expected: Academic Calendar updated and Add to My Calendar button visible
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>10:08:53 PM</td>
+        <td>
+          Actual: Checkbox unchecked and button verified successfully
+        </td>
+      </tr>
+      <tr class="event-row">
+        <td><span class="badge log pass-bg">Pass</span></td>
+        <td>10:08:53 PM</td>
+        <td>
+          Result: PASS
         </td>
       </tr>
   </tbody>
@@ -178,25 +220,25 @@
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0">Started</p>
-<h3>Mar 25, 2026 03:31:56 PM</h3>
+<h3>Mar 25, 2026 10:07:39 PM</h3>
 </div></div>
 </div>
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0">Ended</p>
-<h3>Mar 25, 2026 03:32:32 PM</h3>
+<h3>Mar 25, 2026 10:08:54 PM</h3>
 </div></div>
 </div>
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0 text-pass">Tests Passed</p>
-<h3>0</h3>
+<h3>1</h3>
 </div></div>
 </div>
 <div class="col-md-3">
 <div class="card"><div class="card-body">
 <p class="m-b-0 text-fail">Tests Failed</p>
-<h3>1</h3>
+<h3>0</h3>
 </div></div>
 </div>
 </div>
@@ -212,12 +254,12 @@
 </div>
 </div>
 <div class="card-footer">
-<div><small data-tooltip='0%'>
-<b>0</b> tests passed
+<div><small data-tooltip='100%'>
+<b>1</b> tests passed
 </small>
 </div>
 <div>
-<small data-tooltip='100%'><b>1</b> tests failed,
+<small data-tooltip='0%'><b>0</b> tests failed,
 <b>0</b> skipped, <b data-tooltip='0%'>0</b> others
 </small>
 </div>
@@ -235,10 +277,10 @@
 </div>
 </div>
 <div class="card-footer">
-<div><small data-tooltip='0%'><b>0</b> events passed</small></div>
+<div><small data-tooltip='21%'><b>3</b> events passed</small></div>
 <div>
-<small data-tooltip='37%'><b>3</b> events failed,
-<b data-tooltip='%'>5</b> others
+<small data-tooltip='0%'><b>0</b> events failed,
+<b data-tooltip='%'>11</b> others
 </small>
 </div>
 </div>
@@ -254,7 +296,7 @@
 </div></div>
 <script>
 var timeline = {
-"Scenario 4: Download a Dataset (Negative)":29.635
+"Scenario 5: Update the Academic Calendar":72.145
 };
 </script>
 <div class="row">
@@ -285,8 +327,8 @@ var timeline = {
 <script>
 var statusGroup = {
 parentCount: 5,
-passParent: 0,
-failParent: 1,
+passParent: 1,
+failParent: 0,
 warningParent: 0,
 skipParent: 0,
 childCount: 5,
@@ -302,11 +344,11 @@ warningGrandChild: 0,
 skipGrandChild: 0,
 infoGrandChild: 0,
 eventsCount: 5,
-passEvents: 0,
-failEvents: 3,
+passEvents: 3,
+failEvents: 0,
 warningEvents: 0,
 skipEvents: 0,
-infoEvents: 5
+infoEvents: 11
 };
 </script>        </div>
       </div>

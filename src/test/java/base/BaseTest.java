@@ -63,7 +63,10 @@ public class BaseTest {
 
     /**
      * Handles NEU login via Microsoft SSO + Duo 2FA.
-     * This is a two-step login: email first, then password.
+     * Step 1: Enter email on Microsoft login page
+     * Step 2: Enter password
+     * Step 3: Wait for Duo 2FA manual approval
+     * Step 4: Handle "Is this your device?" prompt
      *
      * @param url      - the URL to navigate to (triggers SSO)
      * @param username - NEU email or username
@@ -83,10 +86,8 @@ public class BaseTest {
         System.out.println("Entered email and clicked Next.");
 
         // Step 2: Enter password
-        // Wait for password field to appear (could be Microsoft or NEU page)
         Thread.sleep(2000);
-        WebElement passwordField = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.id("i0118")));
+        WebElement passwordField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
         passwordField.clear();
         passwordField.sendKeys(password);
 

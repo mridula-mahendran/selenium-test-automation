@@ -46,37 +46,24 @@ public class Scenario1_TranscriptTest extends BaseTest {
         String transcriptType = transcriptData.get("TranscriptType");
 
         try {
-            // Step a) Navigate to NEU portal and log in
+            // Step a) Log in to NEU portal via Microsoft SSO
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_A_Login");
-            driver.get(url);
-            ReportManager.logInfo(test, "Navigated to: " + url);
-
-            // Enter username
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
-            driver.findElement(By.id("username")).sendKeys(username);
-            driver.findElement(By.id("password")).sendKeys(password);
-            driver.findElement(By.name("_eventId_proceed")).click();
-            ReportManager.logInfo(test, "Entered credentials and clicked login.");
-
-            // Handle Duo 2FA - wait for user to manually approve
-            // The assignment allows pressing Enter once for 2FA
-            ReportManager.logInfo(test, "Waiting for Duo 2FA approval...");
-            Thread.sleep(20000); // Wait 20 seconds for manual 2FA approval
+            performNEULogin(url, username, password);
+            ReportManager.logInfo(test, "Logged in to NEU portal.");
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_A_Login");
 
-            // Step b) Launch Student Hub portal
+            // Step b) Navigate to Student Hub
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_B_StudentHub");
-            wait.until(ExpectedConditions.urlContains("me.northeastern.edu"));
-            // Navigate to Student Hub
-            driver.get("https://me.northeastern.edu/StudentHub");
-            wait.until(ExpectedConditions.titleContains("Student"));
-            ReportManager.logInfo(test, "Launched Student Hub portal.");
+            driver.get("https://student.me.northeastern.edu/");
+            wait.until(ExpectedConditions.urlContains("student.me.northeastern"));
+            ReportManager.logInfo(test, "Navigated to Student Hub portal.");
+            Thread.sleep(2000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_B_StudentHub");
 
             // Step c) Click on Resources tab
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_C_Resources");
             WebElement resourcesTab = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'Resources') or contains(@href,'resources')]")));
+                    By.xpath("//a[contains(text(),'Resources')]")));
             resourcesTab.click();
             ReportManager.logInfo(test, "Clicked on Resources tab.");
             Thread.sleep(2000);
@@ -94,7 +81,7 @@ public class Scenario1_TranscriptTest extends BaseTest {
             // Step e) Click on Unofficial Transcript
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_E_Transcript");
             WebElement transcriptLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//*[contains(text(),'Unofficial Transcript')]")));
+                    By.xpath("//a[contains(text(),'Unofficial Transcript')]")));
             transcriptLink.click();
             ReportManager.logInfo(test, "Clicked on Unofficial Transcript.");
             Thread.sleep(3000);
@@ -138,10 +125,8 @@ public class Scenario1_TranscriptTest extends BaseTest {
             Thread.sleep(3000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_F_SelectOptions");
 
-            // Step g) Print page and save as PDF using Ctrl+P shortcut
+            // Step g) Print page and save as PDF
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_G_PrintPage");
-
-            // Use JavaScript to trigger print (the PDF save is configured in ChromeOptions)
             JavascriptExecutor js = (JavascriptExecutor) driver;
             js.executeScript("window.print();");
             ReportManager.logInfo(test, "Triggered Print to save as PDF.");

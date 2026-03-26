@@ -35,21 +35,10 @@ public class Scenario2_CalendarEventTest extends BaseTest {
         String password = loginData.get("Password");
 
         try {
-            // Step a) Log in to Canvas
+            // Step a) Log in to Canvas via NEU SSO
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_A_Login");
-            driver.get("https://northeastern.instructure.com/");
-            ReportManager.logInfo(test, "Navigated to Canvas.");
-
-            // NEU SSO login
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
-            driver.findElement(By.id("username")).sendKeys(username);
-            driver.findElement(By.id("password")).sendKeys(password);
-            driver.findElement(By.name("_eventId_proceed")).click();
-            ReportManager.logInfo(test, "Entered credentials and clicked login.");
-
-            // Handle Duo 2FA
-            ReportManager.logInfo(test, "Waiting for Duo 2FA approval...");
-            Thread.sleep(20000);
+            performNEULogin("https://northeastern.instructure.com/", username, password);
+            ReportManager.logInfo(test, "Logged in to Canvas.");
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_A_Login");
 
             // Navigate to Calendar
@@ -88,7 +77,7 @@ public class Scenario2_CalendarEventTest extends BaseTest {
                         By.xpath("//span[text()='Edit Event']/..")));
 
                 // Fill in Title
-                ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Event" + (i + 1) + "_FillTitle");
+                ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Event" + (i + 1) + "_FillForm");
                 WebElement titleField = wait.until(ExpectedConditions.visibilityOfElementLocated(
                         By.xpath("//input[@placeholder='Input Event Title...']")));
                 titleField.clear();
@@ -97,7 +86,7 @@ public class Scenario2_CalendarEventTest extends BaseTest {
 
                 // Fill in Date
                 WebElement dateField = driver.findElement(
-                        By.xpath("//input[contains(@placeholder,'Date') or @type='text' and ancestor::*[contains(.,'Date')]]"));
+                        By.xpath("//input[contains(@placeholder,'Date') or ancestor::*[contains(.,'Date')]/input[@type='text']]"));
                 dateField.clear();
                 dateField.sendKeys(date);
                 dateField.sendKeys(Keys.TAB);
@@ -124,7 +113,7 @@ public class Scenario2_CalendarEventTest extends BaseTest {
                 calendarSelect.selectByVisibleText(calendar);
                 ReportManager.logInfo(test, "Selected calendar: " + calendar);
 
-                ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Event" + (i + 1) + "_FillTitle");
+                ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Event" + (i + 1) + "_FillForm");
 
                 // Click "More Options" to access the Details field
                 ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Event" + (i + 1) + "_MoreOptions");
@@ -150,7 +139,6 @@ public class Scenario2_CalendarEventTest extends BaseTest {
 
                 // Switch back to main content
                 driver.switchTo().defaultContent();
-
                 ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Event" + (i + 1) + "_FillDetails");
 
                 // Click "Create Event" button to submit

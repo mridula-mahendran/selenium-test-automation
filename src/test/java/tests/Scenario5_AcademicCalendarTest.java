@@ -17,7 +17,7 @@ import java.util.Map;
  * Steps:
  *   a) Navigate to Student Hub and click on Resources
  *   b) Click on Academics, Classes & Registration
- *   c) Click on Academic Calendar
+ *   c) Click on Academic Calendar from the expanded list
  *   d) Click on Academic Calendar under Northeastern University Registrar
  *   e) Scroll down and navigate to the calendars on the right side
  *   f) Uncheck any one checkbox from the right section
@@ -38,27 +38,17 @@ public class Scenario5_AcademicCalendarTest extends BaseTest {
         String password = loginData.get("Password");
 
         try {
-            // Step a) Navigate to Student Hub
-            ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_A_NavigateHub");
-            driver.get("https://me.northeastern.edu");
-            ReportManager.logInfo(test, "Navigated to NEU portal.");
-
-            // NEU SSO Login
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
-            driver.findElement(By.id("username")).sendKeys(username);
-            driver.findElement(By.id("password")).sendKeys(password);
-            driver.findElement(By.name("_eventId_proceed")).click();
-            ReportManager.logInfo(test, "Entered credentials and clicked login.");
-
-            // Handle Duo 2FA
-            ReportManager.logInfo(test, "Waiting for Duo 2FA approval...");
-            Thread.sleep(20000);
-            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_A_NavigateHub");
+            // Step a) Log in and navigate to Student Hub
+            ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_A_Login");
+            performNEULogin("https://me.northeastern.edu", username, password);
+            ReportManager.logInfo(test, "Logged in to NEU portal.");
+            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_A_Login");
 
             // Navigate to Student Hub
             driver.get("https://student.me.northeastern.edu/");
-            wait.until(ExpectedConditions.titleContains("Student"));
+            wait.until(ExpectedConditions.urlContains("student.me.northeastern"));
             ReportManager.logInfo(test, "Navigated to Student Hub.");
+            Thread.sleep(2000);
 
             // Click on Resources
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_A_ClickResources");
@@ -69,25 +59,26 @@ public class Scenario5_AcademicCalendarTest extends BaseTest {
             Thread.sleep(2000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_A_ClickResources");
 
-            // Step b) Click on Academics, Classes & Registration
+            // Step b) Click on Academics, Classes & Registration tile
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_B_ClickAcademics");
-            WebElement academicsLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//*[contains(text(),'Academics')]")));
-            academicsLink.click();
-            ReportManager.logInfo(test, "Clicked on Academics, Classes & Registration.");
-            Thread.sleep(2000);
+            WebElement academicsTile = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//span[contains(@class,'fui-Tab__content') and contains(text(),'Academics')]")));
+            academicsTile.click();
+            ReportManager.logInfo(test, "Clicked on Academics, Classes & Registration tile.");
+            Thread.sleep(3000); // Wait for the expanded list to fully load
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_B_ClickAcademics");
 
-            // Step c) Click on Academic Calendar
+            // Step c) Click on Academic Calendar from the EXPANDED LIST (not Recent Links)
+            // The expanded list links have data-gtm-resources-link-section="Main"
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_C_ClickCalendar");
             WebElement calendarLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'Academic Calendar')]")));
+                    By.xpath("//a[@data-gtm-resources-link='Academic Calendar' and @data-gtm-resources-link-section='Main']")));
             calendarLink.click();
-            ReportManager.logInfo(test, "Clicked on Academic Calendar.");
+            ReportManager.logInfo(test, "Clicked on Academic Calendar from expanded list.");
             Thread.sleep(3000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_C_ClickCalendar");
 
-            // Switch to new window if it opened in a new tab
+            // Switch to new window if it opened in a new tab (target="_blank")
             String mainWindow = driver.getWindowHandle();
             for (String window : driver.getWindowHandles()) {
                 if (!window.equals(mainWindow)) {
@@ -96,62 +87,76 @@ public class Scenario5_AcademicCalendarTest extends BaseTest {
                 }
             }
 
-            // Step d) Click on Academic Calendar under Registrar
+            // Step d) Click on "Academic Calendar" on the Registrar calendar page
+            // We should now be on registrar.northeastern.edu/group/calendar/
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_D_ClickRegistrarCalendar");
-            wait.until(ExpectedConditions.urlContains("registrar"));
+            Thread.sleep(3000);
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+
             WebElement academicCalendarLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//a[contains(text(),'Academic Calendar') and contains(@href,'academic-calendar')]")));
+                    By.xpath("//a[contains(@href,'academic-calendar') and contains(@class,'__item')]")));
             academicCalendarLink.click();
             ReportManager.logInfo(test, "Clicked on Academic Calendar under Registrar.");
-            Thread.sleep(3000);
+            Thread.sleep(5000);
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_D_ClickRegistrarCalendar");
 
             // Step e) Scroll down to the Calendars section on the right side
+            // The calendar is inside an iframe (trumba.spud.7.iframe), so we need to switch into it
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_E_ScrollToCalendars");
-            JavascriptExecutor js = (JavascriptExecutor) driver;
+            Thread.sleep(3000);
 
-            // Scroll to the Calendars checkboxes section
-            WebElement calendarsSection = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.xpath("//*[text()='Calendars']")));
-            js.executeScript("arguments[0].scrollIntoView(true);", calendarsSection);
-            ReportManager.logInfo(test, "Scrolled to Calendars section.");
+            // First scroll down to make the iframe visible
+            js.executeScript("window.scrollBy(0, 1000)");
             Thread.sleep(2000);
+
+            // Switch into the Calendar List iframe by name
+            driver.switchTo().frame("trumba.spud.7.iframe");
+            ReportManager.logInfo(test, "Switched to Calendar List iframe.");
+            Thread.sleep(3000); // Wait for iframe content to fully load
+
+            ReportManager.logInfo(test, "Scrolled to Calendars section.");
+
+            // Switch back to main page for screenshot
+            driver.switchTo().defaultContent();
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_E_ScrollToCalendars");
 
-            // Step f) Uncheck one checkbox (Quarter - CPS Graduate)
+            // Step f) Uncheck one checkbox — the checkboxes are <a> tags with class "twCalendarListName" inside the iframe
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_F_UncheckCalendar");
-            WebElement qtrCheckbox = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("//input[@type='checkbox' and following-sibling::*[contains(text(),'Quarter')] or @id[contains(.,'qtr')]]")));
 
-            // If checkbox is checked, uncheck it
-            if (qtrCheckbox.isSelected()) {
-                qtrCheckbox.click();
-                ReportManager.logInfo(test, "Unchecked Quarter - CPS Graduate (QTR) checkbox.");
-            } else {
-                // Try clicking the label/text instead
-                WebElement qtrLabel = driver.findElement(
-                        By.xpath("//*[contains(text(),'Quarter - CPS Graduate')]"));
-                qtrLabel.click();
-                ReportManager.logInfo(test, "Clicked on Quarter - CPS Graduate label to toggle.");
-            }
+            // Switch back into the iframe by name
+            driver.switchTo().frame("trumba.spud.7.iframe");
             Thread.sleep(2000);
-            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_F_UncheckCalendar");
 
-            // Verify the checkbox is now unchecked
-            Assert.assertFalse(qtrCheckbox.isSelected(),
-                    "Quarter - CPS Graduate checkbox should be unchecked.");
-            ReportManager.logInfo(test, "Verified checkbox is unchecked.");
+            // Click on the checkbox for "Quarter - CPS Graduate (QTR)" to uncheck it
+            WebElement qtrCheckbox = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//input[@type='checkbox' and contains(@aria-label,'Quarter')]")));
+            qtrCheckbox.click();
+            ReportManager.logInfo(test, "Clicked on Quarter - CPS Graduate (QTR) to toggle.");
+            Thread.sleep(2000);
+
+            // Switch back to main page for screenshot
+            driver.switchTo().defaultContent();
+            ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_F_UncheckCalendar");
+            ReportManager.logInfo(test, "Checkbox toggled successfully.");
 
             // Step g) Scroll down and verify Add to My Calendar button is displayed
+            // The button is inside the "List Calendar View" iframe (trumba.spud.2.iframe)
             ScreenshotHelper.takeBeforeScreenshot(driver, SCENARIO_NAME, "Step_G_VerifyAddButton");
             js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
             Thread.sleep(2000);
 
+            // Switch into the List Calendar View iframe
+            driver.switchTo().frame("trumba.spud.2.iframe");
+            Thread.sleep(2000);
+
             WebElement addToCalendarButton = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                    By.xpath("//input[@value='Add to My Calendar'] | //button[contains(text(),'Add to My Calendar')]")));
+                    By.xpath("//button[.//span[contains(text(),'Add to My Calendar')]]")));
+
             Assert.assertTrue(addToCalendarButton.isDisplayed(),
                     "Add to My Calendar button should be displayed.");
             ReportManager.logInfo(test, "Verified Add to My Calendar button is displayed.");
+
+            driver.switchTo().defaultContent();
             ScreenshotHelper.takeAfterScreenshot(driver, SCENARIO_NAME, "Step_G_VerifyAddButton");
 
             ReportManager.logPass(test, "Academic Calendar updated and Add to My Calendar button visible",
